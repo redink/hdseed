@@ -32,33 +32,47 @@ defmodule SeedGenerator do
   """
   @spec generate(String.t(), String.t(), List.t()) :: String.t()
   def generate(secret, salt, opts \\ []) do
-    opts = opts
-    |> Keyword.put_new(:iterations, 2048)
-    |> Keyword.put_new(:length, 64)
-    |> Keyword.put_new(:digest, :sha512)
-    |> Enum.into(%{})
+    opts =
+      opts
+      |> Keyword.put_new(:iterations, 2048)
+      |> Keyword.put_new(:length, 64)
+      |> Keyword.put_new(:digest, :sha512)
+      |> Enum.into(%{})
 
     generate(mac_fun(opts[:digest]), secret, salt, opts, 1, [])
   end
 
   defp generate(_fun, _secret, _salt, %{length: length}, _, _)
-    when length > @max_length, do: {:error, :derived_key_too_long}
+       when length > @max_length,
+       do: {:error, :derived_key_too_long}
 
   defp generate(fun, secret, salt, opts, block_index, acc) do
     length = opts[:length]
+
     case IO.iodata_length(acc) > length do
       true ->
-        key = acc |> Enum.reverse |> IO.iodata_to_binary
+        key = acc |> Enum.reverse() |> IO.iodata_to_binary()
         <<bin::binary-size(length), _::binary>> = key
         bin
+
       false ->
         block = generate(fun, secret, salt, opts, block_index, 1, "", "")
         generate(fun, secret, salt, opts, block_index + 1, [block, acc])
     end
   end
 
-  defp generate(_fun, _secret, _salt, %{iterations: iterations}, _block_index, iteration, _prev, acc)
-    when iteration > iterations, do: acc
+  defp generate(
+         _fun,
+         _secret,
+         _salt,
+         %{iterations: iterations},
+         _block_index,
+         iteration,
+         _prev,
+         acc
+       )
+       when iteration > iterations,
+       do: acc
 
   defp generate(fun, secret, salt, opts, block_index, 1, _prev, _acc) do
     initial = fun.(secret, <<salt::binary, block_index::integer-size(32)>>)
@@ -81,6 +95,7 @@ defmodule SeedGenerator do
   """
   @spec to_hex(Bitstring.t()) :: String.t()
   def to_hex(<<>>), do: <<>>
+
   def to_hex(<<char::integer-size(8), rest::binary>>) do
     hex1 = char |> div(16) |> to_hex_digit
     hex2 = char |> rem(16) |> to_hex_digit

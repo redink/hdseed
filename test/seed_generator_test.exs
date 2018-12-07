@@ -14,8 +14,7 @@ defmodule SeedGeneratorTest do
 
   test "validate seed generation 1" do
     mnemonic = "jar valid medal provide coral pet beef burger similar expand park unable"
-    seed_bin = SeedGenerator.generate(mnemonic, "mnemonic")
-    seed_hex = seed_bin |> SeedGenerator.to_hex()
+    seed_hex = SeedGenerator.generate_hex(mnemonic, "mnemonic")
 
     assert seed_hex ==
              "3cfb7eb48977cc66186299ec6de13034512c45972bf8b7e91188c20e09231b2000d46f27302fe08d143dc0f83c3dca46ba3ede18ddb2bc138052efd2ca49d581"
@@ -23,8 +22,7 @@ defmodule SeedGeneratorTest do
 
   test "validate seed generation 2" do
     mnemonic = "present frequent term shuffle adapt forget typical system home jewel wreck half"
-    seed_bin = SeedGenerator.generate(mnemonic, "mnemonic")
-    seed_hex = seed_bin |> SeedGenerator.to_hex()
+    seed_hex = SeedGenerator.generate_hex(mnemonic, "mnemonic")
 
     assert seed_hex ==
              "579cc41929cc6654bbf388e9c27050d3de6b8f538b4e0b2f68dac725d883c4641f83af669d0e9c794fc99c0e578f3a19633f3f3fe2c4ab8f35f5b5629e2adbec"

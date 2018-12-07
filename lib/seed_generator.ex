@@ -13,6 +13,16 @@ defmodule SeedGenerator do
   @max_length bsl(1, 32) - 1
 
   @doc """
+  Returns a a derived key suitable for use as HEX type.
+  """
+  @spec generate_hex(String.t(), String.t(), List.t()) :: String.t()
+  def generate_hex(secret, salt \\ "", opts \\ []) do
+    secret
+    |> generate(salt, opts)
+    |> to_hex()
+  end
+
+  @doc """
   Returns a derived key suitable for use.
 
   The first parameter to the PBKDF2 key-stretching function is the mnemonic phrase.

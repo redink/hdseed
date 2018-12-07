@@ -1,6 +1,6 @@
-# SeedGenerator
+# Hdseed
 
-SeedGenerator is a [PBKDF2][] implementation for [Elixir][]. Conforming to [rfc2898][].
+Hdseed is a [PBKDF2][] implementation for [Elixir][]. Conforming to [rfc2898][].
 
 [PBKDF2]: http://en.wikipedia.org/wiki/PBKDF2
 [Elixir]: http://elixir-lang.org
@@ -14,10 +14,10 @@ that key in multiple incompatible contexts.
 
 ```elixir
 defmodule User do
-  import SeedGenerator
+  import Hdseed
 
   def encrypt_password(password, salt, opts \\ []) do
-    generate(password, salt, opts) |> to_hex
+    gen(password, salt, opts) |> to_hex
   end
 end
 
@@ -31,5 +31,7 @@ key = User.encrypt_password("password", "salt")
 * `:length`     - a length in octets for the derived key. Defaults to 64;
 * `:digest`     - an hmac function to use as the pseudo-random function.
                   Defaults to `:sha512`;
-                  
+
 Original library [repository](https://github.com/scrogson/key_generator)
+
+From [repository](https://github.com/quanterall/seed_generator)

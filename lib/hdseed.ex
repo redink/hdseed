@@ -1,6 +1,6 @@
-defmodule SeedGenerator do
+defmodule Hdseed do
   @moduledoc """
-  SeedGenerator is a simple implementation of PBKDF2.
+  Hdseed is a simple implementation of PBKDF2.
 
   It can be used to derive a number of keys for various purposes from a given
   secret. This lets applications have a single secure secret, but avoid reusing
@@ -15,10 +15,10 @@ defmodule SeedGenerator do
   @doc """
   Returns a a derived key suitable for use as HEX type.
   """
-  @spec generate_hex(String.t(), String.t(), List.t()) :: String.t()
-  def generate_hex(secret, salt \\ "", opts \\ []) do
+  @spec gen_hex(String.t(), String.t(), List.t()) :: String.t()
+  def gen_hex(secret, salt \\ "", opts \\ []) do
     secret
-    |> generate(salt, opts)
+    |> gen(salt, opts)
     |> to_hex()
   end
 
@@ -42,17 +42,18 @@ defmodule SeedGenerator do
   * `:digest`     - an hmac function to use as the pseudo-random function.
                     Defaults to `:sha512`;
   """
-  @spec generate(String.t(), String.t(), List.t()) :: String.t()
-  def generate(secret, salt \\ "", opts \\ []) do
+  @spec gen(String.t(), String.t(), List.t()) :: String.t()
+  def gen(secret, salt \\ "", opts \\ []) do
     opts = Map.new(Keyword.merge(@default_options, opts))
-    generate(mac_fun(opts[:digest]), secret, salt, opts, 1, [])
+    gen(mac_fun(opts[:digest]), secret, salt, opts, 1, [])
   end
 
-  defp generate(_fun, _secret, _salt, %{length: length}, _, _)
+  @doc false
+  defp gen(_fun, _secret, _salt, %{length: length}, _, _)
        when length > @max_length,
        do: {:error, :derived_key_too_long}
 
-  defp generate(fun, secret, salt, %{length: length} = opts, block_index, acc) do
+  defp gen(fun, secret, salt, %{length: length} = opts, block_index, acc) do
     case IO.iodata_length(acc) > length do
       true ->
         <<bin::binary-size(length), _::binary>> =
@@ -63,25 +64,27 @@ defmodule SeedGenerator do
         bin
 
       false ->
-        block = generate(fun, secret, salt, opts, block_index, 1, "", "")
-        generate(fun, secret, salt, opts, block_index + 1, [block, acc])
+        block = gen(fun, secret, salt, opts, block_index, 1, "", "")
+        gen(fun, secret, salt, opts, block_index + 1, [block, acc])
     end
   end
 
-  defp generate(_, _, _, %{iterations: iterations}, _, iteration, _, acc)
+  @doc false
+  defp gen(_, _, _, %{iterations: iterations}, _, iteration, _, acc)
        when iteration > iterations,
        do: acc
 
-  defp generate(fun, secret, salt, opts, block_index, 1, _prev, _acc) do
+  defp gen(fun, secret, salt, opts, block_index, 1, _prev, _acc) do
     initial = fun.(secret, <<salt::binary, block_index::integer-size(32)>>)
-    generate(fun, secret, salt, opts, block_index, 2, initial, initial)
+    gen(fun, secret, salt, opts, block_index, 2, initial, initial)
   end
 
-  defp generate(fun, secret, salt, opts, block_index, iteration, prev, acc) do
+  defp gen(fun, secret, salt, opts, block_index, iteration, prev, acc) do
     next = fun.(secret, prev)
-    generate(fun, secret, salt, opts, block_index, iteration + 1, next, :crypto.exor(next, acc))
+    gen(fun, secret, salt, opts, block_index, iteration + 1, next, :crypto.exor(next, acc))
   end
 
+  @doc false
   defp mac_fun(digest) do
     fn key, data ->
       :crypto.hmac(digest, key, data)
@@ -101,6 +104,9 @@ defmodule SeedGenerator do
     <<hex1, hex2, rest::binary>>
   end
 
+  @doc false
   defp to_hex_digit(n) when n < 10, do: ?0 + n
   defp to_hex_digit(n), do: ?a + n - 10
+
+  # __end_of_module__
 end

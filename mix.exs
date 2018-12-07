@@ -1,4 +1,4 @@
-defmodule SeedGenerator.Mixfile do
+defmodule Hdseed.Mixfile do
   use Mix.Project
 
   def project do

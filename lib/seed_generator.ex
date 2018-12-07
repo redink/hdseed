@@ -8,6 +8,8 @@ defmodule SeedGenerator do
   """
 
   use Bitwise
+
+  @default_options [iterations: 2048, length: 64, digest: :sha512]
   @max_length bsl(1, 32) - 1
 
   @doc """
@@ -31,14 +33,8 @@ defmodule SeedGenerator do
                     Defaults to `:sha512`;
   """
   @spec generate(String.t(), String.t(), List.t()) :: String.t()
-  def generate(secret, salt, opts \\ []) do
-    opts =
-      opts
-      |> Keyword.put_new(:iterations, 2048)
-      |> Keyword.put_new(:length, 64)
-      |> Keyword.put_new(:digest, :sha512)
-      |> Enum.into(%{})
-
+  def generate(secret, salt \\ "", opts \\ []) do
+    opts = Map.new(Keyword.merge(@default_options, opts))
     generate(mac_fun(opts[:digest]), secret, salt, opts, 1, [])
   end
 
@@ -46,13 +42,14 @@ defmodule SeedGenerator do
        when length > @max_length,
        do: {:error, :derived_key_too_long}
 
-  defp generate(fun, secret, salt, opts, block_index, acc) do
-    length = opts[:length]
-
+  defp generate(fun, secret, salt, %{length: length} = opts, block_index, acc) do
     case IO.iodata_length(acc) > length do
       true ->
-        key = acc |> Enum.reverse() |> IO.iodata_to_binary()
-        <<bin::binary-size(length), _::binary>> = key
+        <<bin::binary-size(length), _::binary>> =
+          acc
+          |> Enum.reverse()
+          |> IO.iodata_to_binary()
+
         bin
 
       false ->
@@ -61,16 +58,7 @@ defmodule SeedGenerator do
     end
   end
 
-  defp generate(
-         _fun,
-         _secret,
-         _salt,
-         %{iterations: iterations},
-         _block_index,
-         iteration,
-         _prev,
-         acc
-       )
+  defp generate(_, _, _, %{iterations: iterations}, _, iteration, _, acc)
        when iteration > iterations,
        do: acc
 
